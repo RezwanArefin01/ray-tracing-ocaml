@@ -6,7 +6,7 @@ type t =
   ; pixels : Color.t array
   }
 
-let create ?(default = { Color.r = 0.0; g = 0.0; b = 0.0 }) height width =
+let create ?(default = { Color.x = 0.0; y = 0.0; z = 0.0 }) height width =
   Stdio.eprintf "%d %d\n" height width;
   { height; width; pixels = Array.create ~len:(height * width) default }
 ;;

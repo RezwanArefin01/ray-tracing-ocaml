@@ -8,7 +8,7 @@ type t =
   ; camera_center : Point.t
   }
 
-let ray_color ray () = { Color.r = Random.float 1.0; g = Random.float 1.0;  b = Random.float 1. }
+let ray_color ray () = { Color.x = Random.float 1.0; y = Random.float 1.0;  z = Random.float 1. }
 
 let render t () =
   let viewport_width = t.viewport_height *. t.aspect_ratio in
