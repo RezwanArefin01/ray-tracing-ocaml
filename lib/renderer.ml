@@ -1,4 +1,5 @@
 open Base
+open Stdio
 
 type t =
   { height : int
@@ -8,14 +9,18 @@ type t =
   ; camera_center : Point.t
   }
 
-let ray_color ray () = { Color.x = Random.float 1.0; y = Random.float 1.0;  z = Random.float 1. }
+let ray_color (ray : Ray.t) () =
+  let r = Float.sqrt ((1.6 **. 2.) +. 1.) in
+  { Color.x = 0.; y = 0.; z = Vec3.length ray.dir /. r }
+;;
 
 let render t () =
+  let width = Int.of_float (Float.of_int t.height *. t.aspect_ratio) in
   let viewport_width = t.viewport_height *. t.aspect_ratio in
   let viewport_x : Vec3.t = { x = 0.0; y = Float.(-t.viewport_height); z = 0.0 } in
   let viewport_y : Vec3.t = { x = viewport_width; y = 0.0; z = 0.0 } in
-  let pixel_delta_x = Vec3.(viewport_x /. t.viewport_height) in
-  let pixel_delta_y = Vec3.(viewport_y /. viewport_width) in
+  let pixel_delta_x = Vec3.(viewport_x /. Float.of_int t.height) in
+  let pixel_delta_y = Vec3.(viewport_y /. Float.of_int width) in
   let pixel000 : Point.t =
     Vec3.(
       t.camera_center
@@ -24,9 +29,7 @@ let render t () =
       - (viewport_y /. 2.0)
       + ((pixel_delta_x + pixel_delta_y) /. 2.0))
   in
-  let image =
-    Image.create t.height (Int.of_float (Float.of_int t.height *. t.aspect_ratio))
-  in
+  let image = Image.create t.height width in
   for i = 0 to image.height - 1 do
     for j = 0 to image.width - 1 do
       let pixel_center =
