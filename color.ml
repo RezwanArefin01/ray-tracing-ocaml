@@ -6,9 +6,10 @@ type t =
   ; b : float
   }
 
-let quantize v =
-  let v = Float.clamp_exn v ~min:0.0 ~max:1.0 in
-  Int.of_float (v *. 255.0)
+let to_string t =
+  let quantize v =
+    let v = Float.clamp_exn v ~min:0.0 ~max:1.0 in
+    Int.of_float (v *. 255.0)
+  in
+  Printf.sprintf "%d %d %d" (quantize t.r) (quantize t.g) (quantize t.b)
 ;;
-
-let to_string t = Printf.sprintf "%d %d %d" (quantize t.r) (quantize t.g) (quantize t.b)
