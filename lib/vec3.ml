@@ -27,3 +27,7 @@ let length2 t = Float.((t.x * t.x) + (t.y * t.y) + (t.z * t.z))
 let length t = Float.sqrt (length2 t)
 let to_string t = Printf.sprintf "(%.3f, %.3f, %.3f)" t.x t.y t.z
 let unit_vec t = t /. length t
+
+let unit_x = { x = 1.0; y = 0.0; z = 0.0 }
+let unit_y = { x = 0.0; y = 1.0; z = 0.0 }
+let unit_z = { x = 0.0; y = 1.0; z = 1.0 }
