@@ -30,4 +30,4 @@ let unit_vec t = t /. length t
 
 let unit_x = { x = 1.0; y = 0.0; z = 0.0 }
 let unit_y = { x = 0.0; y = 1.0; z = 0.0 }
-let unit_z = { x = 0.0; y = 1.0; z = 1.0 }
+let unit_z = { x = 0.0; y = 0.0; z = 1.0 }
