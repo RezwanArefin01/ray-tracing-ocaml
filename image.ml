@@ -12,8 +12,7 @@ let create ?(default = { Color.r = 0.0; g = 0.0; b = 0.0 }) height width =
 
 let height t = t.height
 let width t = t.width
-let set_pixel t row col color = 
-  t.pixels.((row * t.width) + col) <- color
+let set_pixel t row col color = t.pixels.((row * t.width) + col) <- color
 
 let to_string t =
   String.concat
