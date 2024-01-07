@@ -1,6 +1,7 @@
 (executable
  (name main)
- (libraries stdio base ppx_jane renderer_lib))
+ (libraries stdio base renderer_lib)
+ (preprocess (pps ppx_jane)))
 
 (env
  (dev
