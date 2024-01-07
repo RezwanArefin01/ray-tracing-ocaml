@@ -1,5 +1,4 @@
 open Base
-open Stdio
 
 type t =
   { height : int
@@ -10,8 +9,10 @@ type t =
   }
 
 let ray_color (ray : Ray.t) () =
-  let r = Float.sqrt ((1.6 **. 2.) +. 1.) in
-  { Color.x = 0.; y = 0.; z = Vec3.length ray.dir /. r }
+  let unit = Vec3.unit_vec ray.dir in
+  let a = 0.5 *. (unit.y +. 1.0) in
+  Vec3.(
+    (Float.(1.0 - a) *. { x = 1.; y = 1.; z = 1. }) + (a *. { x = 0.5; y = 0.7; z = 1. }))
 ;;
 
 let render t () =

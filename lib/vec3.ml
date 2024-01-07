@@ -5,7 +5,7 @@ type t =
   ; y : float
   ; z : float
   }
-[@@deriving fields]
+[@@deriving fields, sexp]
 
 let ( ~- ) t = Float.{ x = -t.x; y = -t.y; z = -t.z }
 let ( + ) p q = Float.{ x = p.x + q.x; y = p.y + q.y; z = p.z + q.z }

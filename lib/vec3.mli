@@ -5,7 +5,7 @@ type t =
   ; y : float
   ; z : float
   }
-[@@deriving fields]
+[@@deriving fields, sexp]
 
 val ( ~- ) : t -> t
 val ( + ) : t -> t -> t

@@ -5,6 +5,7 @@ type t =
   ; width: int
   ; pixels : Color.t array
   }
+[@@deriving fields, sexp]
 
 let create ?(default = { Color.x = 0.0; y = 0.0; z = 0.0 }) height width =
   Stdio.eprintf "%d %d\n" height width;
