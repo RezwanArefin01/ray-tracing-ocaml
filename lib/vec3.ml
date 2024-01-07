@@ -13,6 +13,8 @@ let ( - ) p q = Float.{ x = p.x - q.x; y = p.y - q.y; z = p.z - q.z }
 let ( * ) p q = Float.{ x = p.x * q.x; y = p.y * q.y; z = p.z * q.z }
 let ( *. ) c t = Float.{ x = c * t.x; y = c * t.y; z = c * t.z }
 let ( /. ) t c = Float.{ x = t.x / c; y = t.y / c; z = t.z / c }
+let ( +. ) t c = Float.{ x = t.x + c; y = t.y + c; z = t.z + c }
+let ( -. ) t c = Float.{ x = t.x - c; y = t.y - c; z = t.z - c }
 let dot p q = Float.((p.x * q.x) + (p.y * q.y) + (p.z * q.z))
 
 let cross p q =

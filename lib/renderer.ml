@@ -1,4 +1,4 @@
-open Base
+open Base 
 
 type t =
   { height : int
@@ -8,14 +8,40 @@ type t =
   ; camera_center : Point.t
   }
 
-let ray_color (ray : Ray.t) () =
-  let unit = Vec3.unit_vec ray.dir in
-  let a = 0.5 *. (unit.y +. 1.0) in
-  Vec3.(
-    (Float.(1.0 - a) *. { x = 1.; y = 1.; z = 1. }) + (a *. { x = 0.5; y = 0.7; z = 1. }))
+type side =
+  | Inside
+  | Outside
+
+let side (ray : Ray.t) outside_normal =
+  let open Float.O in 
+  if Vec3.dot ray.dir outside_normal < 0. then Inside else Outside
 ;;
 
-let render t () =
+let ray_color (ray : Ray.t) (shapes : (module Shapes.Shape_instance) list) : Color.t =
+  let unit = Vec3.unit_vec ray.dir in
+  let a = 0.5 *. (unit.y +. 1.0) in
+  let default =
+    Vec3.(
+      (Float.(1.0 - a) *. { x = 1.; y = 1.; z = 1. }) + (a *. { x = 0.5; y = 0.7; z = 1. }))
+  in
+  let hit_record_option =
+    shapes
+    |> List.map ~f:(fun shape -> Shapes.hit shape ray ~tmin:0.0 ~tmax:100.0)
+    |> List.fold
+         ~init:(None : Hit_record.t option)
+         ~f:(fun acc hit_record ->
+           match acc, hit_record with
+           | Some x, Some y -> if Float.(x.t < y.t) then acc else hit_record
+           | Some x, _ -> acc
+           | _, Some y -> hit_record
+           | _, _ -> None)
+  in
+  match hit_record_option with
+  | None -> default
+  | Some h -> Vec3.(0.5 *. (h.normal +. 1.))
+;;
+
+let render t (shapes : (module Shapes.Shape_instance) list) =
   let width = Int.of_float (Float.of_int t.height *. t.aspect_ratio) in
   let viewport_width = t.viewport_height *. t.aspect_ratio in
   let viewport_x : Vec3.t = { x = 0.0; y = Float.(-t.viewport_height); z = 0.0 } in
@@ -40,7 +66,7 @@ let render t () =
       let ray : Ray.t =
         { orig = t.camera_center; dir = Vec3.(pixel_center - t.camera_center) }
       in
-      let color = ray_color ray () in
+      let color = ray_color ray shapes in
       Image.set_pixel image i j color
     done
   done;

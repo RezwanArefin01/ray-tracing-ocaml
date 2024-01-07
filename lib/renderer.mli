@@ -8,4 +8,4 @@ type t =
   ; camera_center : Vec3.t
   }
 
-val render : t -> unit -> Image.t
+val render : t -> (module Shapes.Shape_instance) list -> Image.t

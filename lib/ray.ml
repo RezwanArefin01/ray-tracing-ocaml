@@ -1,3 +1,5 @@
+open Base
+
 type t =
   { orig : Point.t
   ; dir : Vec3.t
