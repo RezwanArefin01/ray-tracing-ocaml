@@ -29,7 +29,20 @@ let length2 t = Float.((t.x * t.x) + (t.y * t.y) + (t.z * t.z))
 let length t = Float.sqrt (length2 t)
 let to_string t = Printf.sprintf "(%.3f, %.3f, %.3f)" t.x t.y t.z
 let unit_vec t = t /. length t
-
 let unit_x = { x = 1.0; y = 0.0; z = 0.0 }
 let unit_y = { x = 0.0; y = 1.0; z = 0.0 }
 let unit_z = { x = 0.0; y = 0.0; z = 1.0 }
+
+let rec random_in_unit () =
+  let open Float.O in
+  let random () = Random.float_range ~-.1.0 1.0 in 
+  let v = { x = random (); y = random () ; z = random ()} in
+  if length2 v < 1.0 then v else random_in_unit ()
+;;
+
+let random_on_unit () = unit_vec (random_in_unit ())
+
+let rec random_on_hemisphere normal =
+  let v = random_on_unit () in
+  if Float.(dot v normal > 0.0) then v else -v
+;;

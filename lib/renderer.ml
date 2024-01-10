@@ -6,6 +6,7 @@ type t =
   ; aspect_ratio : float
   ; vfov : float
   ; samples_per_pixel : int
+  ; max_depth : int
   }
 
 type side =
@@ -17,29 +18,37 @@ let side (ray : Ray.t) outside_normal =
   if Vec3.dot ray.dir outside_normal > 0. then Inside else Outside
 ;;
 
-let ray_color (ray : Ray.t) (shapes : (module Shapes.Shape_instance) list) : Color.t =
-  let unit = Vec3.unit_vec ray.dir in
-  let a = 0.5 *. (unit.y +. 1.0) in
-  let default =
-    Vec3.(
-      (Float.(1.0 - a) *. { x = 1.; y = 1.; z = 1. }) + (a *. { x = 0.5; y = 0.7; z = 1. }))
-  in
-  let hit_record_option =
-    shapes
-    |> List.map ~f:(fun shape ->
-      Shapes.hit shape ray ~tmin:Float.zero ~tmax:Float.infinity)
-    |> List.fold
-         ~init:(None : Hit_record.t option)
-         ~f:(fun acc hit_record ->
-           match acc, hit_record with
-           | Some x, Some y -> if Float.(x.t < y.t) then acc else hit_record
-           | Some x, _ -> acc
-           | _, Some y -> hit_record
-           | _, _ -> None)
-  in
-  match hit_record_option with
-  | None -> default
-  | Some h -> Vec3.(0.5 *. (h.normal +. 1.))
+let rec ray_color (ray : Ray.t) (shapes : (module Shapes.Shape_instance) list) depth
+  =
+  if depth <= 0
+  then Color.{ x = 0.; y = 0.; z = 0. }
+  else (
+    let hit_record_option =
+      shapes
+      |> List.map ~f:(fun shape ->
+        Shapes.hit shape ray ~tmin:0.001 ~tmax:Float.infinity)
+      |> List.fold
+           ~init:(None : Hit_record.t option)
+           ~f:(fun acc hit_record ->
+             match acc, hit_record with
+             | Some x, Some y -> if Float.(x.t < y.t) then acc else hit_record
+             | Some x, _ -> acc
+             | _, Some y -> hit_record
+             | _, _ -> None)
+    in
+    let unit = Vec3.unit_vec ray.dir in
+    let a = 0.5 *. (unit.y +. 1.0) in
+    let default =
+      Vec3.(
+        (Float.(1.0 - a) *. { x = 1.; y = 1.; z = 1. })
+        + (a *. { x = 0.5; y = 0.7; z = 1. }))
+    in
+    match hit_record_option with
+    | None -> default
+    | Some h -> 
+      let child_ray = Ray.{ orig = h.p; dir = Vec3.random_on_hemisphere h.normal } in
+      Vec3.(1.0 *. ray_color child_ray shapes Int.(depth - 1))
+  )
 ;;
 
 let render t (shapes : (module Shapes.Shape_instance) list) =
@@ -74,7 +83,7 @@ let render t (shapes : (module Shapes.Shape_instance) list) =
           let ray : Ray.t =
             { orig = camera_center; dir = Vec3.(sample_point - camera_center) }
           in
-          ray_color ray shapes)
+          ray_color ray shapes t.max_depth)
       in
       let color = Array.reduce_exn sample_colors ~f:Vec3.( + ) in
       let color = Vec3.(color /. Float.of_int t.samples_per_pixel) in
