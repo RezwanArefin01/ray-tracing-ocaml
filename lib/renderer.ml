@@ -46,8 +46,8 @@ let rec ray_color (ray : Ray.t) (shapes : (module Shapes.Shape_instance) list) d
     match hit_record_option with
     | None -> default
     | Some h -> 
-      let child_ray = Ray.{ orig = h.p; dir = Vec3.random_on_hemisphere h.normal } in
-      Vec3.(1.0 *. ray_color child_ray shapes Int.(depth - 1))
+      let child_ray = Ray.{ orig = h.p; dir = Vec3.(h.normal + random_in_unit ())} in
+      Vec3.(0.5 *. ray_color child_ray shapes Int.(depth - 1))
   )
 ;;
 
