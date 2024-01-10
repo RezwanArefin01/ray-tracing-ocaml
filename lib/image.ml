@@ -1,25 +1,33 @@
 open Base
+open Stdio
 
-type t =
-  { height: int
-  ; width: int
-  ; pixels : Color.t array
-  }
-[@@deriving fields, sexp]
+type t = Color.t array array
 
-let create ?(default = { Color.x = 0.0; y = 0.0; z = 0.0 }) height width =
-  Stdio.eprintf "%d %d\n" height width;
-  { height; width; pixels = Array.create ~len:(height * width) default }
+let create height width = Array.init height ~f:(fun _ -> Array.create ~len:width Color.black)
+
+let set_pixel t row col color = t.(row).(col) <- color
+
+let dimentions t = 
+  (Array.length t, Array.length t.(0))
+
+let print t channel =
+  let (height, width) = dimentions t in
+  let fprintf = Out_channel.fprintf in
+  fprintf channel "P3\n";
+  fprintf channel "%d %d\n" width height;
+  fprintf channel "255\n";
+  Array.iter t ~f:(fun row ->
+    Array.iter row ~f:(fun elem ->
+      fprintf channel "%s\n" (Color.to_string (Color.gamma_correct elem))))
 ;;
 
-let set_pixel t row col color = t.pixels.((row * t.width) + col) <- color
+let to_graphics_image t = 
+  let (height, width) = dimentions t in
+  let image = Array.init height ~f:(fun _ -> Array.create ~len:width Graphics.black) in
+  for i = 0 to height - 1 do
+    for j = 0 to width - 1 do
+      image.(i).(j) <- Color.to_graphics_color t.(i).(j)
+    done
+  done;
+  Graphics.make_image image
 
-let to_string t =
-  String.concat
-    ~sep:"\n"
-    [ "P3"
-    ; Printf.sprintf "%d %d" t.width t.height
-    ; "255"
-    ; String.concat_array ~sep:"\n" (Array.map t.pixels ~f:Color.to_string)
-    ]
-;;
