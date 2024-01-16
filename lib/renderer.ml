@@ -1,5 +1,5 @@
 open Base
-(* module Time = Core.Time_float *)
+open Domainslib
 
 type t =
   { height : int
@@ -74,8 +74,8 @@ let rec ray_color (ray : Ray.t) (shapes : (module Shapes.Shape_instance) list) d
       Vec3.(0.5 *. ray_color child_ray shapes Int.(depth - 1)))
 ;;
 
-let step t =
-  for i = 0 to t.height - 1 do
+let step t pool =
+  Task.parallel_for pool ~start:0 ~finish:(t.height - 1) ~body:(fun i ->
     for j = 0 to t.width - 1 do
       let random_x = Float.of_int i +. Random.float_range ~-.1.0 1.0 in
       let random_y = Float.of_int j +. Random.float_range ~-.1.0 1.0 in
@@ -88,7 +88,6 @@ let step t =
       let color = ray_color ray t.shapes t.max_depth in
       let c = Float.of_int t.samples_per_pixel in
       t.image.(i).(j) <- Vec3.(((c *. t.image.(i).(j)) + color) /. Float.(c + 1.))
-    done
-  done;
+    done);
   t.samples_per_pixel <- t.samples_per_pixel + 1
 ;;

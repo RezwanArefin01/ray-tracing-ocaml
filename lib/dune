@@ -1,6 +1,6 @@
 (library
  (name renderer_lib)
- (libraries base graphics stdio core)
+ (libraries base graphics stdio core domainslib)
  (preprocess
   (pps ppx_jane)))
 

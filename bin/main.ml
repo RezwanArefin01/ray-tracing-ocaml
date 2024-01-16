@@ -1,5 +1,17 @@
 open Base
+open Stdio
+open Domainslib
 open Renderer_lib
+module Time = Core.Time_float
+
+let argv = Sys.get_argv ()
+
+let num_domains =
+  try Int.of_string argv.(1) with
+  | _ -> 12
+;;
+
+let pool = Task.setup_pool ~num_domains ()
 
 let init_graphics r =
   Graphics.open_graph (Printf.sprintf " %dx%d" (Renderer.width r) (Renderer.height r));
@@ -7,15 +19,17 @@ let init_graphics r =
   Graphics.display_mode false
 ;;
 
-let show_image r =
+let show_image r fps avg_fps =
   let height = Renderer.height r in
   let spp = Renderer.samples_per_pixel r in
   Graphics.clear_graph ();
   Graphics.draw_image (Image.to_graphics_image (Renderer.image r)) 0 0;
-  (* Graphics.moveto 10 (height - 20);
-     Graphics.draw_string (Printf.sprintf "FPS: %f" fps); *)
+  Graphics.moveto 10 (height - 20);
+  Graphics.draw_string (Printf.sprintf "Frame: %d" spp);
   Graphics.moveto 10 (height - 40);
-  Graphics.draw_string (Printf.sprintf "RPP: %d" spp);
+  Graphics.draw_string (Printf.sprintf "FPS: %d" (Int.of_float fps));
+  Graphics.moveto 10 (height - 60);
+  Graphics.draw_string (Printf.sprintf "Average FPS: %d" (Int.of_float avg_fps));
   Graphics.synchronize ()
 ;;
 
@@ -30,15 +44,25 @@ let build_scene () =
 ;;
 
 let () =
+  let starting = Time.now() in 
   let height = 600 in
   let aspect_ratio = 16. /. 10. in
   let vfov = 90. in
   let max_depth = 10 in
   let shapes = build_scene () in
   let renderer = Renderer.create ~height ~aspect_ratio ~vfov ~max_depth ~shapes in
-  init_graphics renderer;
-  while true do
-    Renderer.step renderer;
-    show_image renderer
-  done
+  (* init_graphics renderer; *)
+  let avg_fps = ref 0.0 in
+  for _ = 0 to 100 do
+    let starting = Time.now () in
+    Task.run pool (fun () -> Renderer.step renderer pool);
+    let ending = Time.now () in
+    let duration = Time.Span.to_sec (Time.diff ending starting) in
+    let fps = 1. /. duration in
+    avg_fps := (0.1 *. fps) +. (0.9 *. !avg_fps);
+    (* show_image renderer fps !avg_fps *)
+  done; 
+  let ending = Time.now() in 
+  let duration = Time.Span.to_sec (Time.diff ending starting) in
+  eprintf "Total Time: %f\n" duration
 ;;

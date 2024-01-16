@@ -1,4 +1,5 @@
 open Base
+open Domainslib
 
 type t
 
@@ -15,4 +16,4 @@ val create
   -> shapes:(module Shapes.Shape_instance) list
   -> t
 
-val step : t -> unit
+val step : t -> Task.pool -> unit

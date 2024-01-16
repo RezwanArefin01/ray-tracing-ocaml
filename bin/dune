@@ -1,6 +1,6 @@
 (executable
  (name main)
- (libraries stdio base renderer_lib)
+ (libraries stdio base renderer_lib domainslib)
  (preprocess (pps ppx_jane)))
 
 (env
