@@ -1,6 +1,5 @@
 open Base
-open Stdio
-module Time = Core.Time_float
+(* module Time = Core.Time_float *)
 
 type t =
   { height : int
@@ -11,9 +10,12 @@ type t =
   ; pixel_delta_y : Vec3.t
   ; camera_center : Point.t
   ; image : Image.t
+  ; mutable samples_per_pixel : int
+  ; shapes : (module Shapes.Shape_instance) list
   }
+[@@deriving fields]
 
-let create ~height ~aspect_ratio ~vfov ~max_depth =
+let create ~height ~aspect_ratio ~vfov ~max_depth ~shapes =
   let width = Int.of_float (Float.of_int height *. aspect_ratio) in
   let viewport_height = 2.0 *. Float.tan (vfov *. Float.pi /. 360.) in
   let viewport_width = viewport_height *. aspect_ratio in
@@ -39,6 +41,8 @@ let create ~height ~aspect_ratio ~vfov ~max_depth =
   ; pixel_delta_y
   ; camera_center
   ; image
+  ; samples_per_pixel = 0
+  ; shapes
   }
 ;;
 
@@ -70,43 +74,21 @@ let rec ray_color (ray : Ray.t) (shapes : (module Shapes.Shape_instance) list) d
       Vec3.(0.5 *. ray_color child_ray shapes Int.(depth - 1)))
 ;;
 
-let render t (shapes : (module Shapes.Shape_instance) list) =
-  let samples_per_pixel = ref 0 in
-  Graphics.open_graph (Printf.sprintf " %dx%d" t.width t.height);
-  Graphics.set_text_size 100;
-  Graphics.display_mode false;
-  while true do
-    let starting = Time.now () in
-    for i = 0 to t.height - 1 do
-      for j = 0 to t.width - 1 do
-        let random_x = Float.of_int i +. Random.float_range ~-.1.0 1.0 in
-        let random_y = Float.of_int j +. Random.float_range ~-.1.0 1.0 in
-        let sample_point =
-          Vec3.(t.pixel00 + (random_x *. t.pixel_delta_x) + (random_y *. t.pixel_delta_y))
-        in
-        let ray : Ray.t =
-          { orig = t.camera_center; dir = Vec3.(sample_point - t.camera_center) }
-        in
-        let color = ray_color ray shapes t.max_depth in
-        let c = Float.of_int !samples_per_pixel in
-        t.image.(i).(j) <- Vec3.(((c *. t.image.(i).(j)) + color) /. Float.(c + 1.))
-      done
-    done;
-    samples_per_pixel := !samples_per_pixel + 1;
-    Graphics.clear_graph ();
-    Graphics.draw_image (Image.to_graphics_image t.image) 0 0;
-    let ending = Time.now () in
-    let duration = Time.diff ending starting in
-    let fps = 1. /. Time.Span.to_sec duration in
-    Graphics.moveto 10 (t.height - 20);
-    Graphics.draw_string (Printf.sprintf "FPS: %f" fps);
-    Graphics.moveto 10 (t.height - 40);
-    Graphics.draw_string (Printf.sprintf "RPP: %d" !samples_per_pixel);
-    Graphics.synchronize ();
-    eprintf
-      "Frame %d: %f ms\n"
-      !samples_per_pixel
-      (Time.Span.to_ms (Time.diff ending starting));
-    Out_channel.flush stderr
-  done
+let step t =
+  for i = 0 to t.height - 1 do
+    for j = 0 to t.width - 1 do
+      let random_x = Float.of_int i +. Random.float_range ~-.1.0 1.0 in
+      let random_y = Float.of_int j +. Random.float_range ~-.1.0 1.0 in
+      let sample_point =
+        Vec3.(t.pixel00 + (random_x *. t.pixel_delta_x) + (random_y *. t.pixel_delta_y))
+      in
+      let ray : Ray.t =
+        { orig = t.camera_center; dir = Vec3.(sample_point - t.camera_center) }
+      in
+      let color = ray_color ray t.shapes t.max_depth in
+      let c = Float.of_int t.samples_per_pixel in
+      t.image.(i).(j) <- Vec3.(((c *. t.image.(i).(j)) + color) /. Float.(c + 1.))
+    done
+  done;
+  t.samples_per_pixel <- t.samples_per_pixel + 1
 ;;
