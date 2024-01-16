@@ -14,3 +14,4 @@ let white = { x = 1.; y = 1.; z = 1. }
 let red = { x = 1.; y = 0.; z = 0. }
 let green = { x = 0.; y = 1.; z = 0. }
 let blue = { x = 0.; y = 0.; z = 1. }
+let skyblue = { x = 0.5; y = 0.7; z = 1. }

@@ -55,25 +55,16 @@ let rec ray_color (ray : Ray.t) (shapes : (module Shapes.Shape_instance) list) d
   if depth <= 0
   then Color.black
   else (
-    let hit_record_option =
+    let closest_hit =
       shapes
       |> List.map ~f:(fun shape -> Shapes.hit shape ray ~tmin:0.001 ~tmax:Float.infinity)
-      |> List.fold
-           ~init:(None : Hit_record.t option)
-           ~f:(fun acc hit_record ->
-             match acc, hit_record with
-             | Some x, Some y -> if Float.(x.t < y.t) then acc else hit_record
-             | Some x, _ -> acc
-             | _, Some y -> hit_record
-             | _, _ -> None)
+      |> Hit_record.closest
     in
-    let unit = Vec3.unit_vec ray.dir in
-    let a = 0.5 *. (unit.y +. 1.0) in
-    let default =
-      Vec3.((Float.(1.0 - a) *. Color.white) + (a *. { x = 0.5; y = 0.7; z = 1. }))
-    in
-    match hit_record_option with
-    | None -> default
+    match closest_hit with
+    | None ->
+      let unit = Vec3.unit_vec ray.dir in
+      let a = 0.5 *. (unit.y +. 1.0) in
+      Vec3.((Float.(1.0 - a) *. Color.white) + (a *. Color.skyblue))
     | Some h ->
       let child_ray = Ray.{ orig = h.p; dir = Vec3.(h.normal + random_in_unit ()) } in
       Vec3.(0.5 *. ray_color child_ray shapes Int.(depth - 1)))
