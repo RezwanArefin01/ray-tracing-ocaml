@@ -44,25 +44,24 @@ let build_scene () =
 ;;
 
 let () =
-  let starting = Time.now() in 
   let height = 600 in
   let aspect_ratio = 16. /. 10. in
   let vfov = 90. in
   let max_depth = 10 in
   let shapes = build_scene () in
   let renderer = Renderer.create ~height ~aspect_ratio ~vfov ~max_depth ~shapes in
-  (* init_graphics renderer; *)
-  let avg_fps = ref 0.0 in
-  for _ = 0 to 100 do
-    let starting = Time.now () in
-    Task.run pool (fun () -> Renderer.step renderer pool);
-    let ending = Time.now () in
-    let duration = Time.Span.to_sec (Time.diff ending starting) in
-    let fps = 1. /. duration in
-    avg_fps := (0.1 *. fps) +. (0.9 *. !avg_fps);
-    (* show_image renderer fps !avg_fps *)
-  done; 
-  let ending = Time.now() in 
-  let duration = Time.Span.to_sec (Time.diff ending starting) in
-  eprintf "Total Time: %f\n" duration
+  try
+    init_graphics renderer;
+    let avg_fps = ref 0.0 in
+    while true do
+      let starting = Time.now () in
+      Task.run pool (fun () -> Renderer.step renderer pool);
+      let ending = Time.now () in
+      let duration = Time.Span.to_sec (Time.diff ending starting) in
+      let fps = 1. /. duration in
+      avg_fps := (0.1 *. fps) +. (0.9 *. !avg_fps);
+      show_image renderer fps !avg_fps
+    done
+  with
+  | _ -> Image.print (Renderer.image renderer) stdout
 ;;
