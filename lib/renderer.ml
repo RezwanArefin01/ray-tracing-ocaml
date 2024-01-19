@@ -75,7 +75,8 @@ let rec ray_color (ray : Ray.t) (shapes : (module Shapes.Shape_instance) list) d
 ;;
 
 let step t pool =
-  Task.parallel_for pool ~start:0 ~finish:(t.height - 1) ~body:(fun i ->
+  let c = Float.of_int t.samples_per_pixel in
+  Task.parallel_for pool ~chunk_size:50 ~start:0 ~finish:(t.height - 1) ~body:(fun i ->
     for j = 0 to t.width - 1 do
       let random_x = Float.of_int i +. Random.float_range ~-.1.0 1.0 in
       let random_y = Float.of_int j +. Random.float_range ~-.1.0 1.0 in
@@ -86,7 +87,6 @@ let step t pool =
         { orig = t.camera_center; dir = Vec3.(sample_point - t.camera_center) }
       in
       let color = ray_color ray t.shapes t.max_depth in
-      let c = Float.of_int t.samples_per_pixel in
       t.image.(i).(j) <- Vec3.(((c *. t.image.(i).(j)) + color) /. Float.(c + 1.))
     done);
   t.samples_per_pixel <- t.samples_per_pixel + 1

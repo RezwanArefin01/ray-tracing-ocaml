@@ -60,6 +60,8 @@ let () =
       let duration = Time.Span.to_sec (Time.diff ending starting) in
       let fps = 1. /. duration in
       avg_fps := (0.1 *. fps) +. (0.9 *. !avg_fps);
+      eprintf "\rAvgFPS: %3d" (Int.of_float !avg_fps);
+      Out_channel.flush stderr;
       show_image renderer fps !avg_fps
     done
   with
